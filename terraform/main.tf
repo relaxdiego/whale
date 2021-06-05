@@ -38,19 +38,6 @@ resource "aws_internet_gateway" "gw" {
   }
 }
 
-resource "aws_route_table" "egress" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
-  }
-
-  tags = {
-    Name = "${var.vpc_name}-rt-egress"
-  }
-}
-
 
 #
 # PUBLIC SUBNET 1 RESOURCES
@@ -127,9 +114,22 @@ resource "aws_subnet" "private_subnet1" {
   }
 }
 
+resource "aws_route_table" "private_subnet1_egress" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_nat_gateway.nat_gw1.id
+  }
+
+  tags = {
+    Name = "${var.vpc_name}-private-subnet1-egress"
+  }
+}
+
 resource "aws_route_table_association" "private_subnet1_egress" {
   subnet_id      = aws_subnet.private_subnet1.id
-  route_table_id = aws_route_table.egress.id
+  route_table_id = aws_route_table.private_subnet1_egress.id
 }
 
 #
@@ -146,7 +146,20 @@ resource "aws_subnet" "private_subnet2" {
   }
 }
 
+resource "aws_route_table" "private_subnet2_egress" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_nat_gateway.nat_gw2.id
+  }
+
+  tags = {
+    Name = "${var.vpc_name}-private-subnet2-egress"
+  }
+}
+
 resource "aws_route_table_association" "private_subnet2_egress" {
   subnet_id      = aws_subnet.private_subnet2.id
-  route_table_id = aws_route_table.egress.id
+  route_table_id = aws_route_table.private_subnet2_egress.id
 }
