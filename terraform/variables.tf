@@ -18,6 +18,16 @@ variable "vpc_cidr_block" {
   type        = string
 }
 
+variable "authorized_key_name" {
+  description = "The name of the public key to inject to instances launched in the VPC"
+  type        = string
+}
+
+variable "authorized_key" {
+  description = "The public key to inject to instances launched in the VPC"
+  type        = string
+}
+
 variable "vpc_instance_tenancy" {
   description = "A tenancy option for instances launched into the VPC."
   type        = string

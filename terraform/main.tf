@@ -15,6 +15,28 @@ provider "aws" {
 }
 
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_key_pair" "authorized_key" {
+  key_name   = var.authorized_key_name
+  public_key = var.authorized_key
+}
+
+
 resource "aws_vpc" "main" {
   cidr_block       = var.vpc_cidr_block
   instance_tenancy = var.vpc_instance_tenancy
@@ -35,6 +57,23 @@ resource "aws_internet_gateway" "gw" {
 
   tags = {
     Name = "${var.vpc_name}-gw"
+  }
+}
+
+resource "aws_security_group" "bastion" {
+  name   = "${var.vpc_name}-sg-bastion"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    description = "SSH from the Internet"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.vpc_name}-sg-bastion"
   }
 }
 
@@ -66,6 +105,18 @@ resource "aws_nat_gateway" "nat_gw1" {
 
   tags = {
     Name = "${var.vpc_name}-nat-gw1"
+  }
+}
+
+resource "aws_instance" "bastion1" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public_subnet1.id
+  key_name               = var.authorized_key_name
+  vpc_security_group_ids = [aws_security_group.bastion.id]
+
+  tags = {
+    Name = "${var.vpc_name}-bastion1"
   }
 }
 
