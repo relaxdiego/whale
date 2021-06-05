@@ -27,7 +27,7 @@ terraform init
 While still in the terraform subdir:
 
 ```
-cp example.tfvars my-environment-specific.tfvars
+cp example.tfvars my-environment-specific.auto.tfvars
 ```
 
 Then modify the file as you see fit.
@@ -38,6 +38,5 @@ Then modify the file as you see fit.
 While still in the terraform subdir:
 
 ```
-terraform plan
 terraform apply
 ```
