@@ -44,9 +44,10 @@ resource "aws_internet_gateway" "gw" {
 #
 
 resource "aws_subnet" "public_subnet1" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.public_subnet1_cidr_block
-  availability_zone = var.public_subnet1_availability_zone
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet1_cidr_block
+  availability_zone       = var.public_subnet1_availability_zone
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "${var.vpc_name}-public-subnet1"
@@ -74,9 +75,10 @@ resource "aws_nat_gateway" "nat_gw1" {
 #
 
 resource "aws_subnet" "public_subnet2" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.public_subnet2_cidr_block
-  availability_zone = var.public_subnet2_availability_zone
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet2_cidr_block
+  availability_zone       = var.public_subnet2_availability_zone
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "${var.vpc_name}-public-subnet2"
@@ -105,9 +107,10 @@ resource "aws_nat_gateway" "nat_gw2" {
 #
 
 resource "aws_subnet" "private_subnet1" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet1_cidr_block
-  availability_zone = var.public_subnet1_availability_zone
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.private_subnet1_cidr_block
+  availability_zone       = var.public_subnet1_availability_zone
+  map_public_ip_on_launch = false
 
   tags = {
     Name = "${var.vpc_name}-private-subnet1"
@@ -137,9 +140,10 @@ resource "aws_route_table_association" "private_subnet1_egress" {
 #
 
 resource "aws_subnet" "private_subnet2" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet2_cidr_block
-  availability_zone = var.public_subnet2_availability_zone
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.private_subnet2_cidr_block
+  availability_zone       = var.public_subnet2_availability_zone
+  map_public_ip_on_launch = false
 
   tags = {
     Name = "${var.vpc_name}-private-subnet2"
