@@ -1,4 +1,4 @@
-# Wale, Hello There!
+# Whale, Hello There!
 
 ## Provision the Infrastructure
 
