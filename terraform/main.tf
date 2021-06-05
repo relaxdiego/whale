@@ -72,8 +72,66 @@ resource "aws_security_group" "bastion" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  egress {
+    description = "SSH to VPC instances"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr_block]
+  }
+
   tags = {
     Name = "${var.vpc_name}-sg-bastion"
+  }
+}
+
+resource "aws_security_group" "common_egress" {
+  name   = "${var.vpc_name}-sg-common-egress"
+  vpc_id = aws_vpc.main.id
+
+  egress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "ICMP"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.vpc_name}-sg-common-egress"
+  }
+}
+
+resource "aws_security_group" "allow_ssh_within_vpc" {
+  name   = "${var.vpc_name}-sg-allow-ssh-within-vpc"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    description = "SSH from inside VPC"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    self        = true
+  }
+
+  tags = {
+    Name = "${var.vpc_name}-sg-allow-ssh-within-vpc"
   }
 }
 
@@ -109,11 +167,15 @@ resource "aws_nat_gateway" "nat_gw1" {
 }
 
 resource "aws_instance" "bastion1" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.public_subnet1.id
-  key_name               = var.authorized_key_name
-  vpc_security_group_ids = [aws_security_group.bastion.id]
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.public_subnet1.id
+  key_name      = var.authorized_key_name
+  vpc_security_group_ids = [
+    aws_security_group.bastion.id,
+    aws_security_group.common_egress.id,
+    aws_security_group.allow_ssh_within_vpc.id
+  ]
 
   tags = {
     Name = "${var.vpc_name}-bastion1"
@@ -185,6 +247,21 @@ resource "aws_route_table_association" "private_subnet1_egress" {
   subnet_id      = aws_subnet.private_subnet1.id
   route_table_id = aws_route_table.private_subnet1_egress.id
 }
+
+# resource "aws_instance" "test" {
+#   ami           = data.aws_ami.ubuntu.id
+#   instance_type = "t2.micro"
+#   subnet_id     = aws_subnet.private_subnet1.id
+#   key_name      = var.authorized_key_name
+#   vpc_security_group_ids = [
+#     aws_security_group.allow_ssh_within_vpc.id,
+#     aws_security_group.common_egress.id
+#   ]
+#
+#   tags = {
+#     Name = "${var.vpc_name}-test"
+#   }
+# }
 
 #
 # PRIVATE SUBNET 2 RESOURCES
