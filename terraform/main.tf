@@ -107,7 +107,7 @@ resource "aws_nat_gateway" "nat_gw2" {
 resource "aws_subnet" "private_subnet1" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.private_subnet1_cidr_block
-  availability_zone = var.private_subnet1_availability_zone
+  availability_zone = var.public_subnet1_availability_zone
 
   tags = {
     Name = "${var.vpc_name}-private-subnet1"
@@ -139,7 +139,7 @@ resource "aws_route_table_association" "private_subnet1_egress" {
 resource "aws_subnet" "private_subnet2" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.private_subnet2_cidr_block
-  availability_zone = var.private_subnet2_availability_zone
+  availability_zone = var.public_subnet2_availability_zone
 
   tags = {
     Name = "${var.vpc_name}-private-subnet2"

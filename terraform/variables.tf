@@ -49,17 +49,7 @@ variable "private_subnet1_cidr_block" {
   type        = string
 }
 
-variable "private_subnet1_availability_zone" {
-  description = "The AZ where private-subnet1 will reside"
-  type        = string
-}
-
 variable "private_subnet2_cidr_block" {
   description = "The cidr block to use for private-subnet2"
-  type        = string
-}
-
-variable "private_subnet2_availability_zone" {
-  description = "The AZ where private-subnet2 will reside"
   type        = string
 }
