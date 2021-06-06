@@ -19,6 +19,11 @@ Grab the latest Terraform CLI [here](https://www.terraform.io/downloads.html)
 Grab it via [this guide](https://kubernetes.io/docs/tasks/tools/#kubectl)
 
 
+### Install eksctl
+
+Grab it via [this guide](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html)
+
+
 ### Install Helm
 
 Grab it via [this guide](https://helm.sh/docs/intro/install/)
