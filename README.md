@@ -134,6 +134,19 @@ Connected to <HOSTNAME>
 ```
 
 
+### Log in to the UI and API Container Registries
+
+While still in the terraform subdir:
+
+```
+aws ecr get-login-password --region $(terraform output -raw region) | \
+  docker login --username AWS --password-stdin $(terraform output -raw registry_ui)
+
+aws ecr get-login-password --region $(terraform output -raw region) | \
+  docker login --username AWS --password-stdin $(terraform output -raw registry_api)
+```
+
+
 ### Deploy Prometheus
 
 For this section, we will follow [this AWS guide](https://docs.aws.amazon.com/eks/latest/userguide/prometheus.html):

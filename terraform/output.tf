@@ -38,3 +38,11 @@ output "k8s_endpoint" {
 output "k8s_cacert_data" {
   value = aws_eks_cluster.k8s.certificate_authority[0].data
 }
+
+output "registry_ui" {
+  value = aws_ecr_repository.ui.repository_url
+}
+
+output "registry_api" {
+  value = aws_ecr_repository.api.repository_url
+}

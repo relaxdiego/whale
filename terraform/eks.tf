@@ -128,3 +128,26 @@ resource "aws_eks_node_group" "k8s" {
     aws_iam_role_policy_attachment.ecr_read_only,
   ]
 }
+
+
+#
+# Registries
+#
+
+resource "aws_ecr_repository" "ui" {
+  name                 = "${var.env_name}-ui"
+  image_tag_mutability = "IMMUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_repository" "api" {
+  name                 = "${var.env_name}-api"
+  image_tag_mutability = "IMMUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
