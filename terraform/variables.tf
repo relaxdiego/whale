@@ -1,3 +1,8 @@
+variable "env_name" {
+  description = "The name to give to this environment. Will be used to prefix names of various resources."
+  type        = string
+}
+
 variable "profile" {
   description = "The AWS CLI profile to use"
   type        = string
@@ -5,11 +10,6 @@ variable "profile" {
 
 variable "region" {
   description = "AWS region to use"
-  type        = string
-}
-
-variable "vpc_name" {
-  description = "The name to give to this VPC"
   type        = string
 }
 

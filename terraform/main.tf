@@ -42,7 +42,7 @@ resource "aws_vpc" "main" {
   instance_tenancy = var.vpc_instance_tenancy
 
   tags = {
-    Name = var.vpc_name
+    Name = "${var.env_name}-vpc"
   }
 }
 
@@ -56,12 +56,12 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.vpc_name}-gw"
+    Name = "${var.env_name}-gw"
   }
 }
 
 resource "aws_security_group" "bastion" {
-  name   = "${var.vpc_name}-sg-bastion"
+  name   = "${var.env_name}-sg-bastion"
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -81,12 +81,12 @@ resource "aws_security_group" "bastion" {
   }
 
   tags = {
-    Name = "${var.vpc_name}-sg-bastion"
+    Name = "${var.env_name}-sg-bastion"
   }
 }
 
 resource "aws_security_group" "common_egress" {
-  name   = "${var.vpc_name}-sg-common-egress"
+  name   = "${var.env_name}-sg-common-egress"
   vpc_id = aws_vpc.main.id
 
   egress {
@@ -114,12 +114,12 @@ resource "aws_security_group" "common_egress" {
   }
 
   tags = {
-    Name = "${var.vpc_name}-sg-common-egress"
+    Name = "${var.env_name}-sg-common-egress"
   }
 }
 
 resource "aws_security_group" "allow_ssh_within_vpc" {
-  name   = "${var.vpc_name}-sg-allow-ssh-within-vpc"
+  name   = "${var.env_name}-sg-allow-ssh-within-vpc"
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -131,7 +131,7 @@ resource "aws_security_group" "allow_ssh_within_vpc" {
   }
 
   tags = {
-    Name = "${var.vpc_name}-sg-allow-ssh-within-vpc"
+    Name = "${var.env_name}-sg-allow-ssh-within-vpc"
   }
 }
 
@@ -147,7 +147,7 @@ resource "aws_subnet" "public_subnet1" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.vpc_name}-public-subnet1"
+    Name = "${var.env_name}-public-subnet1"
   }
 }
 
@@ -162,7 +162,7 @@ resource "aws_nat_gateway" "nat_gw1" {
   depends_on    = [aws_internet_gateway.gw]
 
   tags = {
-    Name = "${var.vpc_name}-nat-gw1"
+    Name = "${var.env_name}-nat-gw1"
   }
 }
 
@@ -178,7 +178,7 @@ resource "aws_instance" "bastion1" {
   ]
 
   tags = {
-    Name = "${var.vpc_name}-bastion1"
+    Name = "${var.env_name}-bastion1"
   }
 }
 
@@ -194,7 +194,7 @@ resource "aws_subnet" "public_subnet2" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.vpc_name}-public-subnet2"
+    Name = "${var.env_name}-public-subnet2"
   }
 }
 
@@ -210,7 +210,7 @@ resource "aws_nat_gateway" "nat_gw2" {
   depends_on    = [aws_internet_gateway.gw]
 
   tags = {
-    Name = "${var.vpc_name}-nat-gw2"
+    Name = "${var.env_name}-nat-gw2"
   }
 }
 
@@ -226,7 +226,7 @@ resource "aws_subnet" "private_subnet1" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "${var.vpc_name}-private-subnet1"
+    Name = "${var.env_name}-private-subnet1"
   }
 }
 
@@ -239,7 +239,7 @@ resource "aws_route_table" "private_subnet1_egress" {
   }
 
   tags = {
-    Name = "${var.vpc_name}-private-subnet1-egress"
+    Name = "${var.env_name}-private-subnet1-egress"
   }
 }
 
@@ -259,7 +259,7 @@ resource "aws_route_table_association" "private_subnet1_egress" {
 #   ]
 #
 #   tags = {
-#     Name = "${var.vpc_name}-test"
+#     Name = "${var.env_name}-test"
 #   }
 # }
 
@@ -274,7 +274,7 @@ resource "aws_subnet" "private_subnet2" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "${var.vpc_name}-private-subnet2"
+    Name = "${var.env_name}-private-subnet2"
   }
 }
 
@@ -287,7 +287,7 @@ resource "aws_route_table" "private_subnet2_egress" {
   }
 
   tags = {
-    Name = "${var.vpc_name}-private-subnet2-egress"
+    Name = "${var.env_name}-private-subnet2-egress"
   }
 }
 
