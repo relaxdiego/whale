@@ -11,7 +11,17 @@ up at https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
 ### Install Terraform
 
-Grab the latest Terraform CLI at https://www.terraform.io/downloads.html
+Grab the latest Terraform CLI [here](https://www.terraform.io/downloads.html)
+
+
+### Install kubectl
+
+Grab it via [this guide](https://kubernetes.io/docs/tasks/tools/#kubectl)
+
+
+### Install Helm
+
+Grab it via [this guide](https://helm.sh/docs/intro/install/)
 
 
 ### Initialize the Terraform Working Directory
@@ -102,6 +112,8 @@ aws eks --region=$(terraform output -raw region) \
   --name $(terraform output -raw k8s_cluster_name)
 
 kubectl config use-context $(terraform output -raw k8s_cluster_arn)
+
+chmod 0600 ~/.kube/config
 ```
 
 
@@ -115,6 +127,38 @@ Connected to <HOSTNAME>
 <Press Ctrl-] then Enter then e>
 / # exit
 ```
+
+
+### Deploy Prometheus
+
+For this section, we will follow [this AWS guide](https://docs.aws.amazon.com/eks/latest/userguide/prometheus.html):
+
+```
+kubectl create namespace prometheus
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+helm upgrade -i prometheus prometheus-community/prometheus \
+    --namespace prometheus \
+    --set alertmanager.persistentVolume.storageClass="gp2",server.persistentVolume.storageClass="gp2"
+```
+
+Watch for the status of each prometheus pod via:
+
+```
+watch -d kubectl get pods -n prometheus
+```
+
+Once all of them are up, temporarily set up port forwarding to access the
+Prometheus UI:
+
+```
+kubectl --namespace=prometheus port-forward deploy/prometheus-server 9090
+```
+
+Browse to http://localhost:9090
+
+When you're done, hit Ctrl-C to stop the port forwarding.
 
 
 ### Clean Up That Blubber!
