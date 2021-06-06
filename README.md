@@ -33,6 +33,31 @@ cp example.tfvars my-environment-specific.auto.tfvars
 Then modify the file as you see fit.
 
 
+### Create the DB Credentials File
+
+Here's an example of how to create one:
+
+```
+whale_env_name=<TYPE-IN-THE-VALUE-OF-env_name-TF-VARIABLE-HERE>
+
+whale_secret_file=~/.whale/secrets/db_creds-${whale_env_name}.json
+mkdir -p ~/.whale/secrets
+chmod 0700 ~/.whale/secrets
+cat > $whale_secret_file <<EOF
+{
+    "db_user": "SU_$(uuidgen | tr -d '-')",
+    "db_pass": "$(uuidgen)"
+}
+EOF
+chmod 0600 $whale_secret_file
+
+aws secretsmanager create-secret \
+  --name "whale-db-creds-${whale_env_name}"\
+  --description "Whale DB credentials for ${whale_env_name} environment" \
+  --secret-string file://$whale_secret_file
+```
+
+
 ### And We're Off!
 
 While still in the terraform subdir:

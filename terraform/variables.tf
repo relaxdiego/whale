@@ -63,3 +63,8 @@ variable "private_subnet2_cidr_block" {
   description = "The cidr block to use for private-subnet2"
   type        = string
 }
+
+variable "db_creds_secret_name" {
+  description = "The name of the AWS Secret containing the database credentials"
+  type        = string
+}
