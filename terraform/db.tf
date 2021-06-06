@@ -23,7 +23,7 @@ resource "aws_db_subnet_group" "db" {
 }
 
 resource "aws_db_instance" "db" {
-  # identifier           = local.db_name
+  identifier           = "${var.env_name}-db"
   allocated_storage    = 20
   engine               = "postgres"
   instance_class       = "db.t2.micro"
