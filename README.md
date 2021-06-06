@@ -214,7 +214,7 @@ eksctl create iamserviceaccount \
 --override-existing-serviceaccounts \
 --approve
 
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.2/cert-manager.yaml
+kubectl apply --validate=false -f aws-lb-controller/cert-manager.yaml
 
 cat aws-lb-controller/load-balancer.yaml | \
   sed 's@--cluster-name=your-cluster-name@'"--cluster-name=${whale_k8s_cluster_name}"'@' | \
