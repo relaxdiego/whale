@@ -92,6 +92,19 @@ ssh ubuntu@$(terraform output -raw bastion1_public_ip)
 ```
 
 
+### Set-up Your kubectl Config File
+
+While still in the terraform subdir:
+
+```
+aws eks --region=$(terraform output -raw region) \
+  update-kubeconfig \
+  --name $(terraform output -raw k8s_cluster_name)
+
+kubectl config use-context $(terraform output -raw k8s_cluster_arn)
+```
+
+
 ### Clean Up That Blubber!
 
 While still in the terraform subdir:
