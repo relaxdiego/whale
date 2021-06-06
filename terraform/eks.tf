@@ -80,6 +80,7 @@ resource "aws_iam_role_policy_attachment" "ecr_read_only" {
 resource "aws_launch_template" "k8s" {
   name = "${var.env_name}-k8s-launch-template"
   vpc_security_group_ids = [
+    aws_eks_cluster.k8s.vpc_config[0].cluster_security_group_id,
     aws_security_group.allow_db_access_within_vpc.id,
     aws_security_group.allow_ssh_within_vpc.id,
     aws_security_group.common_egress.id,
