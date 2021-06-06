@@ -31,12 +31,8 @@ resource "aws_db_instance" "db" {
   db_subnet_group_name = "${var.env_name}-db"
   username             = local.db_creds.db_user
   password             = local.db_creds.db_pass
-
-  # Commenting out to save on cost, yo!
-  # multi_az             = true
-
-  # Comment out the following in a production environment, yo!
-  skip_final_snapshot = true
+  multi_az             = var.db_multi_az
+  skip_final_snapshot  = var.db_skip_final_snapshot
 
   depends_on = [aws_db_subnet_group.db]
 }

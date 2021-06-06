@@ -68,3 +68,15 @@ variable "db_creds_secret_name" {
   description = "The name of the AWS Secret containing the database credentials"
   type        = string
 }
+
+variable "db_multi_az" {
+  description = "Should the database be multi AZ or not?"
+  type        = bool
+  default     = true
+}
+
+variable "db_skip_final_snapshot" {
+  description = "Should we skip snapshot creation just before deleting the DB?"
+  type        = bool
+  default     = false
+}
