@@ -80,3 +80,27 @@ variable "db_skip_final_snapshot" {
   type        = bool
   default     = false
 }
+
+variable "k8s_desired_size" {
+  description = "Desired number of worker nodes"
+  type        = number
+  default     = 2
+}
+
+variable "k8s_min_size" {
+  description = "Minimum number of worker nodes"
+  type        = number
+  default     = 2
+}
+
+variable "k8s_max_size" {
+  description = "Maximum number of worker nodes"
+  type        = number
+  default     = 2
+}
+
+variable "k8s_node_instance_types" {
+  description = "List of instance types associated with the EKS Node Group"
+  type        = list(any)
+  default     = ["t3.medium"]
+}
