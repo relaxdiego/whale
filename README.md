@@ -75,5 +75,7 @@ While still in the terraform subdir:
 whale_env_name=<TYPE-IN-THE-VALUE-OF-env_name-TF-VARIABLE-HERE>
 
 terraform destroy
-aws secretsmanager delete-secret --secret-id "whale-db-creds-${whale_env_name}"
+aws secretsmanager delete-secret \
+  --force-delete-without-recovery \
+  --secret-id "whale-db-creds-${whale_env_name}"
 ```
