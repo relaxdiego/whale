@@ -186,6 +186,42 @@ kubectl create ns whale
 ```
 
 
+### Install the Load Balancer Controller
+
+We will base the following steps on [this guide](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/deploy/installation/)
+
+```
+cd <PROJECT-ROOT>
+
+eksctl utils associate-iam-oidc-provider \
+    --region $(terraform -chdir=terraform output -raw region) \
+    --cluster $(terraform -chdir=terraform output -raw k8s_cluster_name) \
+    --approve
+
+aws iam create-policy \
+    --policy-name AWSLoadBalancerControllerIAMPolicy \
+    --policy-document file://aws-lb-controller/iam-policy.json | \
+  tee aws-lb-controller/iam-policy.out
+
+whale_aws_account_id=$(terraform -chdir=terraform output -raw account_id)
+whale_k8s_cluster_name=$(terraform -chdir=terraform output -raw k8s_cluster_name)
+
+eksctl create iamserviceaccount \
+--cluster=$whale_k8s_cluster_name \
+--namespace=kube-system \
+--name=aws-load-balancer-controller \
+--attach-policy-arn=arn:aws:iam::${whale_aws_account_id}:policy/AWSLoadBalancerControllerIAMPolicy \
+--override-existing-serviceaccounts \
+--approve
+
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.2/cert-manager.yaml
+
+cat aws-lb-controller/load-balancer.yaml | \
+  sed 's@--cluster-name=your-cluster-name@'"--cluster-name=${whale_k8s_cluster_name}"'@' | \
+  kubectl apply -f -
+```
+
+
 ### Build and Deploy the UI
 
 While in the project root:

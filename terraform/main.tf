@@ -31,6 +31,8 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_key_pair" "authorized_key" {
   key_name   = var.authorized_key_name
   public_key = var.authorized_key
