@@ -6,3 +6,11 @@ output "bastion1_instance_id" {
 output "bastion1_public_ip" {
   value = aws_instance.bastion1.public_ip
 }
+
+output "db_endpoint" {
+  value = aws_db_instance.db.endpoint
+}
+
+output "db_name" {
+  value = aws_db_instance.db.name
+}
