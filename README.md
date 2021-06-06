@@ -88,7 +88,7 @@ just SSH directly to its public ip.
 While still in the terraform subdir:
 
 ```
-ssh ubuntu@$(terraform output -raw bastion1_public_ip)
+ssh -A ubuntu@$(terraform output -raw bastion1_public_ip)
 ```
 
 
