@@ -174,6 +174,8 @@ resource "aws_subnet" "public_subnet1" {
 
   tags = {
     Name = "${var.env_name}-public-subnet1"
+    # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/deploy/subnet_discovery/
+    "kubernetes.io/role/elb" = 1
   }
 }
 
@@ -222,6 +224,8 @@ resource "aws_subnet" "public_subnet2" {
 
   tags = {
     Name = "${var.env_name}-public-subnet2"
+    # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/deploy/subnet_discovery/
+    "kubernetes.io/role/elb" = 1
   }
 }
 
@@ -254,6 +258,8 @@ resource "aws_subnet" "private_subnet1" {
 
   tags = {
     Name = "${var.env_name}-private-subnet1"
+    # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/deploy/subnet_discovery/
+    "kubernetes.io/role/internal-elb" = 1
   }
 }
 
@@ -303,6 +309,8 @@ resource "aws_subnet" "private_subnet2" {
 
   tags = {
     Name = "${var.env_name}-private-subnet2"
+    # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/deploy/subnet_discovery/
+    "kubernetes.io/role/internal-elb" = 1
   }
 }
 
