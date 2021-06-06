@@ -67,6 +67,31 @@ terraform apply
 ```
 
 
+### Connect to the Bastion for the first time
+
+Use [ssh4realz](https://github.com/relaxdiego/ssh4realz) to ensure
+you connect to the bastion securely. For a guide on how to use the
+script, see [this video](https://youtu.be/TcmOd4whPeQ).
+
+While still in the terraform subdir:
+
+```
+ssh4realz $(terraform output -raw bastion1_instance_id)
+```
+
+
+### Subsequent Bastion SSH Connections
+
+With the bastion's host key already saved to your known_hosts file,
+just SSH directly to its public ip.
+
+While still in the terraform subdir:
+
+```
+ssh ubuntu@$(terraform output -raw bastion1_public_ip)
+```
+
+
 ### Clean Up That Blubber!
 
 While still in the terraform subdir:
