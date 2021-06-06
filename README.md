@@ -247,12 +247,29 @@ cat ui.yaml | \
 
 ### Clean Up That Blubber!
 
-While still in the terraform subdir:
-
 ```
-whale_env_name=<TYPE-IN-THE-VALUE-OF-env_name-TF-VARIABLE-HERE>
+cd <PROJECT-ROOT>
 
-terraform destroy
+whale_env_name=$(terraform -chdir=terraform output -raw env_name)
+whale_k8s_cluster_name=$(terraform -chdir=terraform output -raw k8s_cluster_name)
+whale_aws_account_id=$(terraform -chdir=terraform output -raw account_id)
+
+kubectl delete -n whale -f ui/ui.yaml
+
+kubectl delete -f aws-lb-controller/load-balancer.yaml
+
+kubectl delete -f aws-lb-controller/cert-manager.yaml
+
+eksctl delete iamserviceaccount \
+    --cluster=$whale_k8s_cluster_name \
+    --name=aws-load-balancer-controller
+
+cat aws-lb-controller/iam-policy.out | \
+    jq -r '.Policy.Arn' | \
+    xargs -I {} aws iam delete-policy --policy-arn {}
+
+terraform -chdir=terraform destroy
+
 aws secretsmanager delete-secret \
   --force-delete-without-recovery \
   --secret-id "whale-db-creds-${whale_env_name}"
