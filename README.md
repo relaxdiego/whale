@@ -105,6 +105,18 @@ kubectl config use-context $(terraform output -raw k8s_cluster_arn)
 ```
 
 
+### Sanity Check: Double-check that Pods Can Reach the DB
+
+```
+kubectl run -i --tty --rm debug --image=busybox --restart=Never -- sh
+If you don't see a command prompt, try pressing enter.
+/ # telnet <HOSTNAME-PORTION-OF-db_endpoint-OUTPUT> <PORT-PORTION-OF-db_endpoint-OUTPUT>
+Connected to <HOSTNAME>
+<Press Ctrl-] then Enter then e>
+/ # exit
+```
+
+
 ### Clean Up That Blubber!
 
 While still in the terraform subdir:
