@@ -179,6 +179,36 @@ Browse to http://localhost:9090
 When you're done, hit Ctrl-C to stop the port forwarding.
 
 
+### Prepare the App's k8s Namespace
+
+```
+kubectl create ns whale
+```
+
+
+### Build and Deploy the UI
+
+While in the project root:
+
+```
+cd ui
+
+whale_registry=$(terraform -chdir=../terraform output -raw registry_ui)
+image_version="$(date +%s)"
+
+docker build -t whale-ui .
+
+docker tag whale-ui $whale_registry:$image_version
+
+docker push $whale_registry:$image_version
+
+cat ui.yaml | \
+  sed 's@REGISTRY_URL@'"${whale_registry}"'@' | \
+  sed 's@IMAGE_VERSION@'"${image_version}"'@' | \
+  kubectl apply -n whale -f -
+```
+
+
 ### Clean Up That Blubber!
 
 While still in the terraform subdir:
