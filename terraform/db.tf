@@ -33,6 +33,9 @@ resource "aws_db_instance" "db" {
   password             = local.db_creds.db_pass
   multi_az             = var.db_multi_az
   skip_final_snapshot  = var.db_skip_final_snapshot
+  vpc_security_group_ids = [
+    aws_security_group.allow_db_access_within_vpc.id
+  ]
 
   depends_on = [aws_db_subnet_group.db]
 }

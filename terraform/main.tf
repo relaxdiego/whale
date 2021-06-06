@@ -136,6 +136,30 @@ resource "aws_security_group" "allow_ssh_within_vpc" {
 }
 
 
+resource "aws_security_group" "allow_db_access_within_vpc" {
+  name   = "${var.env_name}-sg-allow-db-access-within-vpc"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    description = "DB access from inside VPC"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    self        = true
+  }
+
+  egress {
+    description = "DB access from inside VPC"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    self        = true
+  }
+
+  tags = {
+    Name = "${var.env_name}-sg-allow-db-access-within-vpc"
+  }
+}
 #
 # PUBLIC SUBNET 1 RESOURCES
 #
@@ -174,7 +198,8 @@ resource "aws_instance" "bastion1" {
   vpc_security_group_ids = [
     aws_security_group.bastion.id,
     aws_security_group.common_egress.id,
-    aws_security_group.allow_ssh_within_vpc.id
+    aws_security_group.allow_ssh_within_vpc.id,
+    aws_security_group.allow_db_access_within_vpc.id
   ]
 
   tags = {
@@ -255,7 +280,8 @@ resource "aws_route_table_association" "private_subnet1_egress" {
 #   key_name      = var.authorized_key_name
 #   vpc_security_group_ids = [
 #     aws_security_group.allow_ssh_within_vpc.id,
-#     aws_security_group.common_egress.id
+#     aws_security_group.common_egress.id,
+#     aws_security_group.allow_db_access_within_vpc.id
 #   ]
 #
 #   tags = {
