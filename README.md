@@ -316,6 +316,39 @@ cat aws-lb-controller/load-balancer.yaml | \
 kubectl create ns whale
 ```
 
+### Create the Cluster Issuer for Whale
+
+The following steps are based off of [this guide](https://cert-manager.io/docs/configuration/acme/dns01/route53/),
+and [this bit of a (working) hack](https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/1084#issuecomment-725566515):
+
+```
+whale_dns_zone=<TYPE-IN-YOUR-FQDN-HERE>
+
+whale_env_name=$(terraform -chdir=terraform output -raw env_name)
+whale_region=$(terraform -chdir=terraform output -raw region)
+whale_hosted_zone_id=$(aws route53 list-hosted-zones | \
+                       jq -r ".HostedZones[] | select(.name=\"${whale_dns_zone}\") | .Id" | \
+                       rev | cut -d '/' -f 1 | rev)
+whale_cert_manager_role_arn=$(terraform -chdir=terraform output -raw cert_manager_role_arn)
+
+cat cert-manager/cluster-issuer.yaml | \
+  sed 's@WHALE_DNS_ZONE@'"${whale_dns_zone}"'@' | \
+  sed 's@WHALE_ENV_NAME@'"${whale_env_name}"'@' | \
+  sed 's@WHALE_REGION@'"${whale_region}"'@' | \
+  sed 's@WHALE_HOSTED_ZONE_ID@'"${whale_hosted_zone_id}"'@' | \
+  sed 's@WHALE_CERT_MANAGER_ROLE_ARN@'"${whale_cert_manager_role_arn}"'@' | \
+  kubectl apply -f -
+```
+
+The above command should have created a ${whale_env_name}-private-key secret:
+
+```
+kubectl get secret ${whale_env_name}-private-key -n cert-manager
+```
+
+If the secret doesn't get created after a few seconds, debug by looking at
+the logs of the cert-manager deployment's pod.
+
 
 ### Build and Deploy the UI
 

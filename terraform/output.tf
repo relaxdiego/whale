@@ -50,3 +50,7 @@ output "registry_ui" {
 output "registry_api" {
   value = aws_ecr_repository.api.repository_url
 }
+
+output "cert_manager_role_arn" {
+  value = aws_iam_role.cert_manager.arn
+}
