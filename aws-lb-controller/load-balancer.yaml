@@ -785,7 +785,7 @@ spec:
     spec:
       containers:
       - args:
-        - --cluster-name=your-cluster-name
+        - --cluster-name=WHALE_CLUSTER_NAME
         - --ingress-class=alb
         image: amazon/aws-alb-ingress-controller:v2.2.0
         livenessProbe:
