@@ -349,11 +349,13 @@ whale_env_name=$(terraform -chdir=terraform output -raw env_name)
 whale_k8s_cluster_name=$(terraform -chdir=terraform output -raw k8s_cluster_name)
 whale_aws_account_id=$(terraform -chdir=terraform output -raw account_id)
 
-kubectl delete -n whale -f ui/ui.yaml
+kubectl delete ns whale
 
 kubectl delete -f aws-lb-controller/load-balancer.yaml
 
-kubectl delete -f aws-lb-controller/cert-manager.yaml
+kubectl delete ns cert-manager
+
+kubectl delete ns prometheus
 
 eksctl delete iamserviceaccount \
     --cluster=$whale_k8s_cluster_name \
