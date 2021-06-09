@@ -32,17 +32,14 @@ Grab it via [this guide](https://helm.sh/docs/intro/install/)
 ### Initialize the Terraform Working Directory
 
 ```
-cd terraform
-terraform init
+terraform -chdir=terraform init
 ```
 
 
 ### Create Your Environment-Specific tfvars File
 
-While still in the terraform subdir:
-
 ```
-cp example.tfvars my-environment-specific.auto.tfvars
+cp terraform/example.tfvars terraform.tfvars
 ```
 
 Then modify the file as you see fit.
@@ -75,23 +72,20 @@ aws secretsmanager create-secret \
 
 ### And We're Off!
 
-While still in the terraform subdir:
 
 ```
-terraform apply
+terraform -chdir=terraform apply
 ```
 
 
-### Connect to the Bastion for the first time
+### (Optional) Connect to the Bastion for the first time
 
 Use [ssh4realz](https://github.com/relaxdiego/ssh4realz) to ensure
 you connect to the bastion securely. For a guide on how to use the
 script, see [this video](https://youtu.be/TcmOd4whPeQ).
 
-While still in the terraform subdir:
-
 ```
-ssh4realz $(terraform output -raw bastion1_instance_id)
+ssh4realz $(terraform -chdir=terraform output -raw bastion1_instance_id)
 ```
 
 
@@ -100,23 +94,21 @@ ssh4realz $(terraform output -raw bastion1_instance_id)
 With the bastion's host key already saved to your known_hosts file,
 just SSH directly to its public ip.
 
-While still in the terraform subdir:
-
 ```
-ssh -A ubuntu@$(terraform output -raw bastion1_public_ip)
+ssh -A ubuntu@$(terraform -chdir=terraform output -raw bastion1_public_ip)
 ```
 
 
 ### Set-up Your kubectl Config File
 
-While still in the terraform subdir:
+Back in your local machine
 
 ```
-aws eks --region=$(terraform output -raw region) \
+aws eks --region=$(terraform -chdir=terraform output -raw region) \
   update-kubeconfig \
-  --name $(terraform output -raw k8s_cluster_name)
+  --name $(terraform -chdir=terraform output -raw k8s_cluster_name)
 
-kubectl config use-context $(terraform output -raw k8s_cluster_arn)
+kubectl config use-context $(terraform -chdir=terraform output -raw k8s_cluster_arn)
 
 chmod 0600 ~/.kube/config
 ```
@@ -125,10 +117,27 @@ chmod 0600 ~/.kube/config
 ### Sanity Check: Double-check that Pods Can Reach the DB
 
 ```
+# Print out the DB endpoint for reference
+terraform -chdir=terraform output db_endpoint
+
 kubectl run -i --tty --rm debug --image=busybox --restart=Never -- sh
-If you don't see a command prompt, try pressing enter.
+```
+
+Once in the prompt, run:
+
+```
 / # telnet <HOSTNAME-PORTION-OF-db_endpoint-OUTPUT> <PORT-PORTION-OF-db_endpoint-OUTPUT>
+```
+
+It should output:
+
+```
 Connected to <HOSTNAME>
+```
+
+To exit:
+
+```
 <Press Ctrl-] then Enter then e>
 / # exit
 ```
@@ -136,14 +145,12 @@ Connected to <HOSTNAME>
 
 ### Log in to the UI and API Container Registries
 
-While still in the terraform subdir:
-
 ```
-aws ecr get-login-password --region $(terraform output -raw region) | \
-  docker login --username AWS --password-stdin $(terraform output -raw registry_ui)
+aws ecr get-login-password --region $(terraform -chdir=terraform output -raw region) | \
+  docker login --username AWS --password-stdin $(terraform -chdir=terraform output -raw registry_ui)
 
-aws ecr get-login-password --region $(terraform output -raw region) | \
-  docker login --username AWS --password-stdin $(terraform output -raw registry_api)
+aws ecr get-login-password --region $(terraform -chdir=terraform output -raw region) | \
+  docker login --username AWS --password-stdin $(terraform -chdir=terraform output -raw registry_api)
 ```
 
 
@@ -179,11 +186,65 @@ Browse to http://localhost:9090
 When you're done, hit Ctrl-C to stop the port forwarding.
 
 
-### Prepare the App's k8s Namespace
+### Ensure Your Cluster Has an OpenID Connect Provider
+
+OIDC will be used by some pods in the cluster to connect to the AWS API.
+This section will be based off of [this guide](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
+
+First check if the cluster already has an OIDC provider:
 
 ```
-kubectl create ns whale
+aws eks describe-cluster \
+    --region $(terraform -chdir=terraform output -raw region) \
+    --name $(terraform -chdir=terraform output -raw k8s_cluster_name) \
+    --query "cluster.identity.oidc.issuer" \
+    --output text
 ```
+
+It should return something like:
+
+```
+https://oidc.eks.us-west-2.amazonaws.com/id/EXAMPLED539D4633E53DE1B716D3041E
+```
+
+Now grep that sample ID from your list of OIDC providers:
+
+```
+aws iam list-open-id-connect-providers | grep <EXAMPLED539D4633E53DE1B716D3041E>
+```
+
+If the above command returned an ARN, you're done with this section. If
+it did not return one, then run:
+
+```
+eksctl utils associate-iam-oidc-provider \
+    --region $(terraform -chdir=terraform output -raw region) \
+    --cluster $(terraform -chdir=terraform output -raw k8s_cluster_name) \
+    --approve
+```
+
+Rerun the aws iam command above again (including the pipe to grep) to
+double check.
+
+
+### Install cert-manager
+
+```
+kubectl apply --validate=false -f cert-manager/cert-manager.yaml
+```
+
+Watch for the status of each pod via:
+
+```
+watch -d kubectl get pods -n cert-manager
+```
+
+
+https://cert-manager.io/docs/configuration/acme/dns01/route53/
+https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation
+https://aws.amazon.com/blogs/security/easier-certificate-validation-using-dns-with-aws-certificate-manager/
+https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/1936
+
 
 
 ### Install the Load Balancer Controller
@@ -192,11 +253,6 @@ We will base the following steps on [this guide](https://kubernetes-sigs.github.
 
 ```
 cd <PROJECT-ROOT>
-
-eksctl utils associate-iam-oidc-provider \
-    --region $(terraform -chdir=terraform output -raw region) \
-    --cluster $(terraform -chdir=terraform output -raw k8s_cluster_name) \
-    --approve
 
 aws iam create-policy \
     --policy-name AWSLoadBalancerControllerIAMPolicy \
@@ -214,11 +270,16 @@ eksctl create iamserviceaccount \
 --override-existing-serviceaccounts \
 --approve
 
-kubectl apply --validate=false -f aws-lb-controller/cert-manager.yaml
-
 cat aws-lb-controller/load-balancer.yaml | \
   sed 's@--cluster-name=your-cluster-name@'"--cluster-name=${whale_k8s_cluster_name}"'@' | \
   kubectl apply -f -
+```
+
+
+### Prepare the App's Namespace
+
+```
+kubectl create ns whale
 ```
 
 
