@@ -274,20 +274,11 @@ watch -d kubectl get pods -n cert-manager
 ```
 
 
-https://cert-manager.io/docs/configuration/acme/dns01/route53/
-https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation
-https://aws.amazon.com/blogs/security/easier-certificate-validation-using-dns-with-aws-certificate-manager/
-https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/1936
-
-
-
 ### Install the Load Balancer Controller
 
 We will base the following steps on [this guide](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/deploy/installation/)
 
 ```
-cd <PROJECT-ROOT>
-
 aws iam create-policy \
     --policy-name AWSLoadBalancerControllerIAMPolicy \
     --policy-document file://aws-lb-controller/iam-policy.json | \
@@ -297,7 +288,7 @@ whale_aws_account_id=$(terraform -chdir=terraform output -raw account_id)
 whale_k8s_cluster_name=$(terraform -chdir=terraform output -raw k8s_cluster_name)
 
 eksctl create iamserviceaccount \
---cluster=$whale_k8s_cluster_name \
+--cluster="$whale_k8s_cluster_name" \
 --namespace=kube-system \
 --name=aws-load-balancer-controller \
 --attach-policy-arn=arn:aws:iam::${whale_aws_account_id}:policy/AWSLoadBalancerControllerIAMPolicy \
@@ -305,8 +296,14 @@ eksctl create iamserviceaccount \
 --approve
 
 cat aws-lb-controller/load-balancer.yaml | \
-  sed 's@--cluster-name=your-cluster-name@'"--cluster-name=${whale_k8s_cluster_name}"'@' | \
+  sed 's@--cluster-name=WHALE_CLUSTER_NAME@'"--cluster-name=${whale_k8s_cluster_name}"'@' | \
   kubectl apply -f -
+```
+
+Watch the controller pod go up via:
+
+```
+watch -d kubectl get pods -n kube-system
 ```
 
 
@@ -392,7 +389,8 @@ kubectl delete ns prometheus
 
 eksctl delete iamserviceaccount \
     --cluster=$whale_k8s_cluster_name \
-    --name=aws-load-balancer-controller
+    --namespace=kube-system \
+    --name=kube-system/aws-load-balancer-controller
 
 cat aws-lb-controller/iam-policy.out | \
     jq -r '.Policy.Arn' | \
