@@ -47,14 +47,17 @@ Then modify the file as you see fit.
 
 ### Create the DB Credentials Secret in AWS
 
-Here's an example of how to create one:
 
 ```
-whale_env_name=<TYPE-IN-THE-VALUE-OF-env_name-TF-VARIABLE-HERE>
-
+whale_aws_cli_profile=$(grep -E ' *profile *=' terraform/terraform.tfvars | sed -E 's/ *profile *= *"(.*)"/\1/g')
+whale_aws_region=$(grep -E ' *region *=' terraform/terraform.tfvars | sed -E 's/ *region *= *"(.*)"/\1/g')
+whale_env_name=$(grep -E ' *env_name *=' terraform/terraform.tfvars | sed -E 's/ *env_name *= *"(.*)"/\1/g')
+whale_db_creds_secret_name=$(grep ' *db_creds_secret_name *=' terraform/terraform.tfvars | sed -E 's/ *db_creds_secret_name *= *"(.*)"/\1/g')
 whale_secret_file=~/.whale/secrets/db_creds-${whale_env_name}.json
+
 mkdir -p ~/.whale/secrets
 chmod 0700 ~/.whale/secrets
+
 cat > $whale_secret_file <<EOF
 {
     "db_user": "SU_$(uuidgen | tr -d '-')",
