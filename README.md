@@ -67,10 +67,41 @@ EOF
 chmod 0600 $whale_secret_file
 
 aws secretsmanager create-secret \
-  --name "whale-db-creds-${whale_env_name}"\
+  --profile "$whale_aws_cli_profile" \
+  --name "$whale_db_creds_secret_name" \
   --description "Whale DB credentials for ${whale_env_name} environment" \
   --secret-string file://$whale_secret_file
 ```
+
+
+### Create a Route 53 Zone for Your Environment
+
+First, get a hold of an FQDN that you own and define it in an env var:
+
+```
+whale_zone_fqdn=<TYPE-IN-YOUR-FQDN-HERE>
+```
+
+Let's also create a unique caller reference:
+
+```
+whale_route53_caller_reference=$(uuidgen | tr -d '-')
+```
+
+Then, create the zone:
+
+```
+whale_aws_cli_profile=$(grep -E ' *profile *=' terraform/terraform.tfvars | sed -E 's/ *profile *= *"(.*)"/\1/g')
+whale_aws_region=$(grep -E ' *region *=' terraform/terraform.tfvars | sed -E 's/ *region *= *"(.*)"/\1/g')
+
+aws route53 create-hosted-zone \
+  --profile "$whale_aws_cli_profile" \
+  --name "$whale_zone_fqdn" \
+  --caller-reference "$whale_route53_caller_reference"
+```
+
+Now modify your DNS servers to use the hosts listed under "DelegationSet.NameServers[]"
+in the command's output as the name servers for $whale_zone_fqdn.
 
 
 ### And We're Off!
