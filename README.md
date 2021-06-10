@@ -406,6 +406,8 @@ whale_env_name=$(terraform -chdir=terraform output -raw env_name)
 whale_k8s_cluster_name=$(terraform -chdir=terraform output -raw k8s_cluster_name)
 whale_aws_account_id=$(terraform -chdir=terraform output -raw account_id)
 
+scripts/delete-tls-resources ui <DOMAIN-FQDN-HERE>
+
 kubectl delete ns whale
 
 kubectl delete -f aws-lb-controller/load-balancer.yaml
@@ -414,18 +416,33 @@ kubectl delete ns cert-manager
 
 kubectl delete ns prometheus
 
+
 eksctl delete iamserviceaccount \
     --cluster=$whale_k8s_cluster_name \
     --namespace=kube-system \
-    --name=kube-system/aws-load-balancer-controller
+    --name=aws-load-balancer-controller
 
 cat aws-lb-controller/iam-policy.out | \
     jq -r '.Policy.Arn' | \
     xargs -I {} aws iam delete-policy --policy-arn {}
 
 terraform -chdir=terraform destroy
+```
 
+Finally, if you no longer plan on bringing up this cluster at
+a later point in time, clean up the following as well:
+
+```
 aws secretsmanager delete-secret \
   --force-delete-without-recovery \
   --secret-id "whale-db-creds-${whale_env_name}"
+
+whale_zone_fqdn=<TYPE-IN-YOUR-FQDN-HERE>
+whale_aws_cli_profile=$(grep -E ' *profile *=' terraform/terraform.tfvars | sed -E 's/ *profile *= *"(.*)"/\1/g')
+whale_aws_region=$(grep -E ' *region *=' terraform/terraform.tfvars | sed -E 's/ *region *= *"(.*)"/\1/g')
+
+aws route53 delete-hosted-zone \
+  --profile "$whale_aws_cli_profile" \
+  --name "$whale_zone_fqdn" \
+  --caller-reference "$whale_route53_caller_reference" > tmp/create-hosted-zone.out
 ```
