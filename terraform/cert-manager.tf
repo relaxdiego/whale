@@ -13,6 +13,14 @@ resource "aws_iam_role" "cert_manager" {
           Service = "ec2.amazonaws.com"
         }
       },
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          AWS = "${resource.aws_iam_role.k8s_node_group.arn}"
+        }
+      }
     ]
   })
 

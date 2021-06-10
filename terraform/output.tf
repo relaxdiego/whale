@@ -6,6 +6,10 @@ output "env_name" {
   value = var.env_name
 }
 
+output "profile" {
+  value = var.profile
+}
+
 output "region" {
   value = var.region
 }

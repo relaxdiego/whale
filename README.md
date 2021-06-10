@@ -97,7 +97,7 @@ whale_aws_region=$(grep -E ' *region *=' terraform/terraform.tfvars | sed -E 's/
 aws route53 create-hosted-zone \
   --profile "$whale_aws_cli_profile" \
   --name "$whale_zone_fqdn" \
-  --caller-reference "$whale_route53_caller_reference"
+  --caller-reference "$whale_route53_caller_reference" > tmp/create-hosted-zone.out
 ```
 
 Now modify your DNS servers to use the hosts listed under "DelegationSet.NameServers[]"
@@ -318,6 +318,8 @@ kubectl create ns whale
 The following steps are based off of [this guide](https://cert-manager.io/docs/configuration/acme/dns01/route53/),
 and [this bit of a (working) hack](https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/1084#issuecomment-725566515):
 
+Next, let's deploy the cluster issuer in another terminal:
+
 ```
 whale_dns_zone=<TYPE-IN-YOUR-FQDN-HERE>
 
@@ -337,19 +339,16 @@ cat cert-manager/cluster-issuer.yaml | \
   kubectl apply -f -
 ```
 
-The above command should have created a ${whale_env_name}-private-key secret:
-
-```
-kubectl get secret ${whale_env_name}-private-key -n cert-manager
-```
-
-If the secret doesn't get created after a few seconds, debug by looking at
-the logs of the cert-manager deployment's pod.
-
+### Import the Generated Key and Cert
 
 ### Build and Deploy the UI
 
-While in the project root:
+First, lets follow events in the whale namespace to know what's happening
+when we apply our manifest later:
+
+```
+kubectl get events -n whale -w
+```
 
 ```
 cd ui
@@ -367,6 +366,34 @@ cat ui.yaml | \
   sed 's@REGISTRY_URL@'"${whale_registry}"'@' | \
   sed 's@IMAGE_VERSION@'"${image_version}"'@' | \
   kubectl apply -n whale -f -
+
+cd ..
+```
+
+In the other terminal session where you're watching events, what for this line:
+
+```
+0s          Normal    CertificateIssued   certificaterequest/whale-prod-tls-<pod-suffix>                        Certificate fetched from issuer successfully
+```
+
+Be patient though as it can take a few minutes and you'll see errors like this:
+
+```
+Error presenting challenge: Time limit exceeded. Last error:
+```
+
+Ignore that. Check the status as well via:
+
+```
+https://check-your-website.server-daten.de/?q=${component}.${whale_dns_zone}
+```
+
+Now we can import that key and cert to ACM:
+
+```
+cd ..  # <PROJECT ROOT>
+
+scripts/import-cert-to-acm ui <DNS_ZONE-FQDN-HERE>
 ```
 
 

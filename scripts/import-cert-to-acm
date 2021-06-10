@@ -1,0 +1,71 @@
+#!/usr/bin/env bash -eu -o pipefail
+
+set -x
+
+namespace=whale
+component=${1}
+domain=${2}
+env_name=$(terraform -chdir=terraform output -raw env_name)
+tls_secret_name=${env_name}-${component}-tls
+profile=$(terraform -chdir=terraform output -raw profile)
+
+kubectl get secret $tls_secret_name -o json -n $namespace | \
+   jq -r '.data."tls.crt"' | \
+   base64 -d | \
+   sed -e '/-----END CERTIFICATE-----/q' > tmp/certificate-${component}.pem
+
+kubectl get secret $tls_secret_name -o json -n $namespace | \
+   jq -r '.data."tls.crt"' | \
+   base64 -d > tmp/certificate-chain-${component}.pem
+
+kubectl get secret $tls_secret_name -o json -n $namespace | \
+   jq -r '.data."tls.key"' | \
+   base64 -d > tmp/private-key-${component}.pem
+
+aws acm import-certificate \
+  --profile "$profile" \
+  --certificate fileb://$(pwd)/tmp/certificate-${component}.pem \
+  --certificate-chain fileb://$(pwd)/tmp/certificate-chain-${component}.pem \
+  --private-key fileb://$(pwd)/tmp/private-key-${component}.pem
+
+export CERTIFICATE_ARN=$(aws acm list-certificates
+    --query CertificateSummaryList[].[CertificateArn,DomainName]
+    --output text | grep "$HOST" | cut -f1 | head -n 1)
+
+CERTIFICATE_ARN=$(aws acm list-certificates \
+    --profile "$profile" \
+    --query CertificateSummaryList[].[CertificateArn,DomainName] \
+    --output text | grep "${component}.${domain}" | cut -f1 | head -n 1)
+
+kubectl annotate --overwrite ingress ingress-whale-${component} \
+    -n whale \
+    alb.ingress.kubernetes.io/certificate-arn=$CERTIFICATE_ARN
+
+# Now we also add a CNAME (${component}.${domain}) pointing to $lb_hostname
+
+lb_hostname=$(kubectl get ingress -n whale ingress-whale-${component} -o json | \
+    jq -r '.status.loadBalancer.ingress[0].hostname')
+
+whale_hosted_zone_id=$(aws route53 list-hosted-zones | \
+                     jq -r ".HostedZones[] | select(.name=\"${whale_domain}\") | .Id" | \
+                     rev | cut -d '/' -f 1 | rev)
+
+
+cat > tmp/change-batch-${component}.${whale_domain} <<EOF
+{
+  "Comment": "CREATE CNAME for ui.whale.kubekit.io",
+  "Changes": [{
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+          "Name": "ui.whale.kubekit.io",
+          "Type": "CNAME",
+          "TTL": 300,
+          "ResourceRecords": [{ "Value": "$lb_hostname" }]
+      }
+  }]
+}
+EOF
+
+aws route53 change-resource-record-sets \
+    --hosted-zone-id "$whale_hosted_zone_id" \
+    --change-batch file://$(pwd)/tmp/change-batch-${component}.${whale_domain}

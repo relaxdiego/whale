@@ -51,13 +51,15 @@ resource "aws_iam_role" "k8s_node_group" {
   name = "${var.env_name}-k8s-node-group"
 
   assume_role_policy = jsonencode({
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "ec2.amazonaws.com"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
       }
-    }]
+    ]
     Version = "2012-10-17"
   })
 }

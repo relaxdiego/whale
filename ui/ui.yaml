@@ -45,9 +45,10 @@ metadata:
   namespace: whale
   name: ingress-whale-ui
   annotations:
+    cert-manager.io/cluster-issuer: whale-prod
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
+    # alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     alb.ingress.kubernetes.io/group.name: "whale"
     alb.ingress.kubernetes.io/certificate-arn: ""
@@ -68,9 +69,9 @@ spec:
   tls:
     - hosts:
         - ui.whale.kubekit.io
+      secretName: whale-prod-ui-tls
   rules:
-    - host: ui.whale.kubekit.io
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
