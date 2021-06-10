@@ -358,7 +358,8 @@ Check that it created the secret for our app:
 kubectl get secret ${whale_env_name}-tls -n cert-manager
 ```
 
-### What for App Events
+
+### Wait for App Events
 
 First, lets follow events in the whale namespace to know what's happening
 when we apply our manifest later:
@@ -366,6 +367,7 @@ when we apply our manifest later:
 ```
 kubectl get events -n whale -w
 ```
+
 
 ### Build and Deploy the UI
 
