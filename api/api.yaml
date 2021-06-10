@@ -26,6 +26,16 @@ spec:
         env:
         - name: POSTGRES_URL
           value: WHALE_POSTGRES_URL
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: db_user
+        - name: POSTGRES_PASS
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: db_pass
         - name: METRICS_URL
           value: WHALE_PROMETHEUS_URL
 ---

@@ -326,6 +326,14 @@ watch -d kubectl get pods -n kube-system
 kubectl create ns whale
 ```
 
+### Add the DB Credentials as a Secret
+
+```
+whale_env_name=$(terraform -chdir=terraform output -raw env_name)
+
+kubectl create secret generic postgres-credentials -n whale --from-env-file <(jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]" ~/.whale/secrets/db_creds-${whale_env_name}.json)
+```
+
 ### Create the Cluster Issuer for Whale
 
 The following steps are based off of [this guide](https://cert-manager.io/docs/configuration/acme/dns01/route53/),
