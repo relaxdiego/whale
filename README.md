@@ -1,5 +1,8 @@
 # Whale, Hello There!
 
+This document contains steps on how to bring up the environment. For a
+discussion on the architecture and design decisions, please see design.pdf
+
 ## Provision the Infrastructure
 
 ### Set up your AWS client
