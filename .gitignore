@@ -31,3 +31,6 @@ override.tf.json
 
 # Ignore temporary stdout files
 *.out
+
+tmp/*
+!.gitkeep
