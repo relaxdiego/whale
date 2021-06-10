@@ -23,6 +23,11 @@ spec:
         image: REGISTRY_URL:IMAGE_VERSION
         ports:
         - containerPort: 80
+        env:
+        - name: POSTGRES_URL
+          value: WHALE_POSTGRES_URL
+        - name: METRICS_URL
+          value: WHALE_PROMETHEUS_URL
 ---
 apiVersion: v1
 kind: Service
