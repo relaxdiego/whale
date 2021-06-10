@@ -339,8 +339,6 @@ cat cert-manager/cluster-issuer.yaml | \
   kubectl apply -f -
 ```
 
-### Import the Generated Key and Cert
-
 ### Build and Deploy the UI
 
 First, lets follow events in the whale namespace to know what's happening
@@ -388,7 +386,8 @@ Ignore that. Check the status as well via:
 https://check-your-website.server-daten.de/?q=${component}.${whale_dns_zone}
 ```
 
-Now we can import that key and cert to ACM:
+
+### Import the Key and Cert to ACM and Add the UI FQDN to Route53
 
 ```
 cd ..  # <PROJECT ROOT>
