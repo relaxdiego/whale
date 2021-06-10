@@ -43,11 +43,11 @@ lb_hostname=$(kubectl get ingress -n whale ingress-whale-${component} -o json | 
     jq -r '.status.loadBalancer.ingress[0].hostname')
 
 whale_hosted_zone_id=$(aws route53 list-hosted-zones | \
-                     jq -r ".HostedZones[] | select(.name=\"${whale_domain}\") | .Id" | \
+                     jq -r ".HostedZones[] | select(.name=\"${domain}\") | .Id" | \
                      rev | cut -d '/' -f 1 | rev)
 
 
-cat > tmp/change-batch-${component}.${whale_domain} <<EOF
+cat > tmp/change-batch-${component}.${domain} <<EOF
 {
   "Comment": "CREATE CNAME for ui.whale.kubekit.io",
   "Changes": [{
@@ -64,4 +64,4 @@ EOF
 
 aws route53 change-resource-record-sets \
     --hosted-zone-id "$whale_hosted_zone_id" \
-    --change-batch file://$(pwd)/tmp/change-batch-${component}.${whale_domain}
+    --change-batch file://$(pwd)/tmp/change-batch-${component}.${domain}

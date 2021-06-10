@@ -100,8 +100,13 @@ aws route53 create-hosted-zone \
   --caller-reference "$whale_route53_caller_reference" > tmp/create-hosted-zone.out
 ```
 
-Now modify your DNS servers to use the hosts listed under "DelegationSet.NameServers[]"
-in the command's output as the name servers for $whale_zone_fqdn.
+List the nameservers for your zone:
+
+```
+cat tmp/create-hosted-zone.out | jq -r '.DelegationSet.NameServers[]'
+```
+
+Now modify your DNS servers to use the hosts listed above.
 
 
 ### And We're Off!
@@ -111,12 +116,14 @@ in the command's output as the name servers for $whale_zone_fqdn.
 terraform -chdir=terraform apply
 ```
 
+Proceed once the above is done.
 
-### (Optional) Connect to the Bastion for the first time
+
+### (Optional) Connect to the Bastion for the First Time
 
 Use [ssh4realz](https://github.com/relaxdiego/ssh4realz) to ensure
-you connect to the bastion securely. For a guide on how to use the
-script, see [this video](https://youtu.be/TcmOd4whPeQ).
+you connect to the bastion securely. For a guide on how to (and why)
+use the script, see [this video](https://youtu.be/TcmOd4whPeQ).
 
 ```
 ssh4realz $(terraform -chdir=terraform output -raw bastion1_instance_id)
@@ -145,6 +152,12 @@ aws eks --region=$(terraform -chdir=terraform output -raw region) \
 kubectl config use-context $(terraform -chdir=terraform output -raw k8s_cluster_arn)
 
 chmod 0600 ~/.kube/config
+```
+
+Check that you're able to connect to the kube-api-server:
+
+```
+kubectl get pods --all-namespaces
 ```
 
 
@@ -282,7 +295,7 @@ We will base the following steps on [this guide](https://kubernetes-sigs.github.
 aws iam create-policy \
     --policy-name AWSLoadBalancerControllerIAMPolicy \
     --policy-document file://aws-lb-controller/iam-policy.json | \
-  tee aws-lb-controller/iam-policy.out
+  tee tmp/iam-policy.out
 
 whale_aws_account_id=$(terraform -chdir=terraform output -raw account_id)
 whale_k8s_cluster_name=$(terraform -chdir=terraform output -raw k8s_cluster_name)
@@ -337,6 +350,12 @@ cat cert-manager/cluster-issuer.yaml | \
   sed 's@WHALE_HOSTED_ZONE_ID@'"${whale_hosted_zone_id}"'@' | \
   sed 's@WHALE_CERT_MANAGER_ROLE_ARN@'"${whale_cert_manager_role_arn}"'@' | \
   kubectl apply -f -
+```
+
+Check that it created the secret for our app:
+
+```
+kubectl get secret ${whale_env_name}-tls -n cert-manager
 ```
 
 ### Build and Deploy the UI
@@ -421,7 +440,7 @@ eksctl delete iamserviceaccount \
     --namespace=kube-system \
     --name=aws-load-balancer-controller
 
-cat aws-lb-controller/iam-policy.out | \
+cat tmp/iam-policy.out | \
     jq -r '.Policy.Arn' | \
     xargs -I {} aws iam delete-policy --policy-arn {}
 
