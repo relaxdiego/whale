@@ -393,7 +393,7 @@ Now we can import that key and cert to ACM:
 ```
 cd ..  # <PROJECT ROOT>
 
-scripts/import-cert-to-acm ui <DNS_ZONE-FQDN-HERE>
+scripts/configure-tls-resources ui <DNS_ZONE-FQDN-HERE>
 ```
 
 
