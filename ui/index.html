@@ -7,6 +7,7 @@
   <h1>Whale, Hello There!</h1>
   <img src="hello-there.jpg" alt="obi-wan"/>
   <div>
+    <input type="text" id="conversationID" value="1234">
     <button type="button" onclick="loadMessages()">Load Messages</button>
   </div>
 
@@ -19,7 +20,7 @@
     xhttp.onload = function() {
       document.getElementById("demo").innerHTML = this.responseText;
     }
-    xhttp.open("GET", "https://api.whale.kubekit.io/healthz");
+    xhttp.open("GET", "https://api.whale.kubekit.io/conversations/" + document.getElementById('conversationID').value);
     xhttp.send();
   }
 </script>
