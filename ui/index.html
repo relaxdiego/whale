@@ -6,5 +6,22 @@
 <body>
   <h1>Whale, Hello There!</h1>
   <img src="hello-there.jpg" alt="obi-wan"/>
+  <div>
+    <button type="button" onclick="loadMessages()">Load Messages</button>
+  </div>
+
+  <div id="demo">
+  </div>
+
+  <script>
+  function loadMessages() {
+    const xhttp = new XMLHttpRequest();
+    xhttp.onload = function() {
+      document.getElementById("demo").innerHTML = this.responseText;
+    }
+    xhttp.open("GET", "https://api.whale.kubekit.io/healthz");
+    xhttp.send();
+  }
+</script>
 </body>
 </html>

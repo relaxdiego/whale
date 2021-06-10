@@ -370,23 +370,7 @@ kubectl get events -n whale -w
 ### Build and Deploy the UI
 
 ```
-cd ui
-
-whale_registry=$(terraform -chdir=../terraform output -raw registry_ui)
-image_version="$(date +%s)"
-
-docker build -t whale-ui .
-
-docker tag whale-ui $whale_registry:$image_version
-
-docker push $whale_registry:$image_version
-
-cat ui.yaml | \
-  sed 's@REGISTRY_URL@'"${whale_registry}"'@' | \
-  sed 's@IMAGE_VERSION@'"${image_version}"'@' | \
-  kubectl apply -n whale -f -
-
-cd ..
+make ui
 ```
 
 In the other terminal session where you're watching events, wait for this line:
@@ -430,8 +414,6 @@ create the ALB fronting the UI.
 ### Build and Deploy the API
 
 ```
-cd .. # PROJECT ROOT
-
 make api
 ```
 
@@ -463,8 +445,6 @@ https://check-your-website.server-daten.de/?q=${component}.${whale_dns_zone}
 ### Import the Key and Cert to ACM and Add the API FQDN to Route53
 
 ```
-cd ..  # <PROJECT ROOT>
-
 scripts/configure-tls-resources api <DNS_ZONE-FQDN-HERE>
 ```
 
@@ -475,8 +455,6 @@ create the ALB fronting the API.
 ### Clean Up That Blubber!
 
 ```
-cd <PROJECT-ROOT>
-
 whale_env_name=$(terraform -chdir=terraform output -raw env_name)
 whale_k8s_cluster_name=$(terraform -chdir=terraform output -raw k8s_cluster_name)
 whale_aws_account_id=$(terraform -chdir=terraform output -raw account_id)

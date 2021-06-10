@@ -2,6 +2,8 @@ from fastapi import (
     Depends,
     FastAPI,
 )
+from fastapi.middleware.cors import CORSMiddleware
+
 from sqlalchemy.orm import Session
 
 from quipper import (
@@ -19,6 +21,18 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+origins = [
+    "https://ui.whale.kubekit.io",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield
 def get_db():
@@ -31,7 +45,7 @@ def get_db():
 
 @app.get("/healthz", status_code=200)
 def get_health():
-    return "healthy"
+    return {"healthy": True}
 
 
 @app.post("/messages/", status_code=201)

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -exuo pipefail
+
+component=ui
+
+cd ${component}
+
+whale_registry=$(terraform -chdir=../terraform output -raw registry_${component})
+image_version="$(cat ../tmp/latest-image-version-${component})"
+
+cat ui.yaml | \
+  sed 's@REGISTRY_URL@'"${whale_registry}"'@' | \
+  sed 's@IMAGE_VERSION@'"${image_version}"'@' | \
+  kubectl apply -n whale -f -

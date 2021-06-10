@@ -9,24 +9,24 @@ env_name=$(terraform -chdir=terraform output -raw env_name)
 tls_secret_name=${env_name}-${component}-tls
 profile=$(terraform -chdir=terraform output -raw profile)
 
-# kubectl get secret $tls_secret_name -o json -n $namespace | \
-#    jq -r '.data."tls.crt"' | \
-#    base64 -d | \
-#    sed -e '/-----END CERTIFICATE-----/q' > tmp/certificate-${component}.pem
-#
-# kubectl get secret $tls_secret_name -o json -n $namespace | \
-#    jq -r '.data."tls.crt"' | \
-#    base64 -d > tmp/certificate-chain-${component}.pem
-#
-# kubectl get secret $tls_secret_name -o json -n $namespace | \
-#    jq -r '.data."tls.key"' | \
-#    base64 -d > tmp/private-key-${component}.pem
-#
-# aws acm import-certificate \
-#   --profile "$profile" \
-#   --certificate fileb://$(pwd)/tmp/certificate-${component}.pem \
-#   --certificate-chain fileb://$(pwd)/tmp/certificate-chain-${component}.pem \
-#   --private-key fileb://$(pwd)/tmp/private-key-${component}.pem
+kubectl get secret $tls_secret_name -o json -n $namespace | \
+   jq -r '.data."tls.crt"' | \
+   base64 -d | \
+   sed -e '/-----END CERTIFICATE-----/q' > tmp/certificate-${component}.pem
+
+kubectl get secret $tls_secret_name -o json -n $namespace | \
+   jq -r '.data."tls.crt"' | \
+   base64 -d > tmp/certificate-chain-${component}.pem
+
+kubectl get secret $tls_secret_name -o json -n $namespace | \
+   jq -r '.data."tls.key"' | \
+   base64 -d > tmp/private-key-${component}.pem
+
+aws acm import-certificate \
+  --profile "$profile" \
+  --certificate fileb://$(pwd)/tmp/certificate-${component}.pem \
+  --certificate-chain fileb://$(pwd)/tmp/certificate-chain-${component}.pem \
+  --private-key fileb://$(pwd)/tmp/private-key-${component}.pem
 
 CERTIFICATE_ARN=$(aws acm list-certificates \
     --profile "$profile" \
