@@ -9,37 +9,37 @@ env_name=$(terraform -chdir=terraform output -raw env_name)
 tls_secret_name=${env_name}-${component}-tls
 profile=$(terraform -chdir=terraform output -raw profile)
 
-kubectl get secret $tls_secret_name -o json -n $namespace | \
-   jq -r '.data."tls.crt"' | \
-   base64 -d | \
-   sed -e '/-----END CERTIFICATE-----/q' > tmp/certificate-${component}.pem
-
-kubectl get secret $tls_secret_name -o json -n $namespace | \
-   jq -r '.data."tls.crt"' | \
-   base64 -d > tmp/certificate-chain-${component}.pem
-
-kubectl get secret $tls_secret_name -o json -n $namespace | \
-   jq -r '.data."tls.key"' | \
-   base64 -d > tmp/private-key-${component}.pem
-
-aws acm import-certificate \
-  --profile "$profile" \
-  --certificate fileb://$(pwd)/tmp/certificate-${component}.pem \
-  --certificate-chain fileb://$(pwd)/tmp/certificate-chain-${component}.pem \
-  --private-key fileb://$(pwd)/tmp/private-key-${component}.pem
+# kubectl get secret $tls_secret_name -o json -n $namespace | \
+#    jq -r '.data."tls.crt"' | \
+#    base64 -d | \
+#    sed -e '/-----END CERTIFICATE-----/q' > tmp/certificate-${component}.pem
+#
+# kubectl get secret $tls_secret_name -o json -n $namespace | \
+#    jq -r '.data."tls.crt"' | \
+#    base64 -d > tmp/certificate-chain-${component}.pem
+#
+# kubectl get secret $tls_secret_name -o json -n $namespace | \
+#    jq -r '.data."tls.key"' | \
+#    base64 -d > tmp/private-key-${component}.pem
+#
+# aws acm import-certificate \
+#   --profile "$profile" \
+#   --certificate fileb://$(pwd)/tmp/certificate-${component}.pem \
+#   --certificate-chain fileb://$(pwd)/tmp/certificate-chain-${component}.pem \
+#   --private-key fileb://$(pwd)/tmp/private-key-${component}.pem
 
 CERTIFICATE_ARN=$(aws acm list-certificates \
     --profile "$profile" \
     --query CertificateSummaryList[].[CertificateArn,DomainName] \
     --output text | grep "${component}.${domain}" | cut -f1 | head -n 1)
 
-kubectl annotate --overwrite ingress ingress-whale-${component} \
+kubectl annotate --overwrite ingress whale-${component} \
     -n whale \
     alb.ingress.kubernetes.io/certificate-arn=$CERTIFICATE_ARN
 
 # Now we also add a CNAME (${component}.${domain}) pointing to $lb_hostname
 
-lb_hostname=$(kubectl get ingress -n whale ingress-whale-${component} -o json | \
+lb_hostname=$(kubectl get ingress -n whale whale-${component} -o json | \
     jq -r '.status.loadBalancer.ingress[0].hostname')
 
 whale_hosted_zone_id=$(aws route53 list-hosted-zones | \
@@ -49,11 +49,11 @@ whale_hosted_zone_id=$(aws route53 list-hosted-zones | \
 
 cat > tmp/change-batch-${component}.${domain} <<EOF
 {
-  "Comment": "CREATE CNAME for ui.whale.kubekit.io",
+  "Comment": "CREATE CNAME for ${component}.whale.kubekit.io",
   "Changes": [{
       "Action": "CREATE",
       "ResourceRecordSet": {
-          "Name": "ui.whale.kubekit.io",
+          "Name": "${component}.whale.kubekit.io",
           "Type": "CNAME",
           "TTL": 300,
           "ResourceRecords": [{ "Value": "$lb_hostname" }]

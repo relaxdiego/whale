@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -exuo pipefail
+
+component=api
+
+cd ${component}
+
+whale_registry=$(terraform -chdir=../terraform output -raw registry_${component})
+image_version="$(cat ../tmp/latest-image-version-${component})"
+whale_prometheus_url=$(kubectl get svc prometheus-server -n prometheus -o json | jq -r '.spec.clusterIP')
+whale_db_endpoint=$(terraform -chdir=../terraform output -raw db_endpoint)
+
+cat ${component}.yaml | \
+  sed 's@REGISTRY_URL@'"${whale_registry}"'@' | \
+  sed 's@IMAGE_VERSION@'"${image_version}"'@' | \
+  sed 's@WHALE_POSTGRES_URL@'"${whale_db_endpoint}"'@' | \
+  sed 's@WHALE_PROMETHEUS_URL@'"${whale_prometheus_url}"'@' | \
+  kubectl apply -n whale -f -

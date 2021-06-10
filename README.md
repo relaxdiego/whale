@@ -358,7 +358,7 @@ Check that it created the secret for our app:
 kubectl get secret ${whale_env_name}-tls -n cert-manager
 ```
 
-### Build and Deploy the UI
+### What for App Events
 
 First, lets follow events in the whale namespace to know what's happening
 when we apply our manifest later:
@@ -366,6 +366,8 @@ when we apply our manifest later:
 ```
 kubectl get events -n whale -w
 ```
+
+### Build and Deploy the UI
 
 ```
 cd ui
@@ -387,7 +389,7 @@ cat ui.yaml | \
 cd ..
 ```
 
-In the other terminal session where you're watching events, what for this line:
+In the other terminal session where you're watching events, wait for this line:
 
 ```
 0s          Normal    CertificateIssued   certificaterequest/whale-prod-tls-<pod-suffix>                        Certificate fetched from issuer successfully
@@ -399,7 +401,14 @@ Be patient though as it can take a few minutes and you'll see errors like this:
 Error presenting challenge: Time limit exceeded. Last error:
 ```
 
-Ignore that. Check the status as well via:
+or:
+
+```
+Failed build model due to ingress: whale/ingress-whale-api: none certificate found for host: ui.whale.kubekit.io
+```
+
+Ignore those. Check the status as well via:
+
 
 ```
 https://check-your-website.server-daten.de/?q=${component}.${whale_dns_zone}
@@ -413,6 +422,54 @@ cd ..  # <PROJECT ROOT>
 
 scripts/configure-tls-resources ui <DNS_ZONE-FQDN-HERE>
 ```
+
+Once this script completes, the AWS LB Controller will be able to
+create the ALB fronting the UI.
+
+
+### Build and Deploy the API
+
+```
+cd .. # PROJECT ROOT
+
+make api
+```
+
+In the other terminal session where you're watching events, wait for this line:
+
+```
+0s          Normal    CertificateIssued   certificaterequest/whale-prod-api-tls-<pod-suffix>                        Certificate fetched from issuer successfully
+```
+
+Be patient though as it can take a few minutes and you'll see errors like this:
+
+```
+Error presenting challenge: Time limit exceeded. Last error:
+```
+
+or:
+
+```
+Failed build model due to ingress: whale/ingress-whale-api: none certificate found for host: api.whale.kubekit.io
+```
+
+Ignore those. Check the status as well via:
+
+```
+https://check-your-website.server-daten.de/?q=${component}.${whale_dns_zone}
+```
+
+
+### Import the Key and Cert to ACM and Add the API FQDN to Route53
+
+```
+cd ..  # <PROJECT ROOT>
+
+scripts/configure-tls-resources api <DNS_ZONE-FQDN-HERE>
+```
+
+Once this script completes, the AWS LB Controller will be able to
+create the ALB fronting the API.
 
 
 ### Clean Up That Blubber!

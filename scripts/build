@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -exuo pipefail
+
+component=$1
+
+cd ${component}
+
+whale_registry=$(terraform -chdir=../terraform output -raw registry_${component})
+image_version="$(date +%s)"
+whale_prometheus_url=$(kubectl get svc prometheus-server -n prometheus -o json | jq -r '.spec.clusterIP')
+whale_db_endpoint=$(terraform -chdir=../terraform output -raw db_endpoint)
+
+docker build -t whale-${component} .
+
+docker tag whale-${component} $whale_registry:$image_version
+
+cd ..
+
+echo $image_version > tmp/latest-image-version-${component}
+
+docker push $whale_registry:$image_version
