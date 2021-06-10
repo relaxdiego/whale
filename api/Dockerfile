@@ -1,10 +1,11 @@
-FROM python:3.9-slim AS builder
+# Stuck with 3.7 due to psycopg2
+FROM python:3.7-slim AS builder
 WORKDIR /opt/api
 COPY ./ .
 RUN pip install -r requirements-dev.txt
 RUN pytest
 
-FROM python:3.9-slim
+FROM python:3.7-slim
 WORKDIR /opt/api
 COPY ./quipper/ ./quipper/
 COPY ./setup.py .
