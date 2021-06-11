@@ -415,8 +415,6 @@ https://check-your-website.server-daten.de/?q=${component}.${whale_dns_zone}
 ### Import the Key and Cert to ACM and Add the UI FQDN to Route53
 
 ```
-cd ..  # <PROJECT ROOT>
-
 scripts/configure-tls-resources ui <DNS_ZONE-FQDN-HERE>
 ```
 
