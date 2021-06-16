@@ -62,7 +62,7 @@ metadata:
   annotations:
     # Empty until we create the certificate in ACM as per README
     alb.ingress.kubernetes.io/certificate-arn: ""
-    alb.ingress.kubernetes.io/group.name: "whale-api"
+    alb.ingress.kubernetes.io/group.name: "whale"
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/ssl-redirect: '443'
@@ -76,7 +76,8 @@ spec:
         - api.whale.kubekit.io
       secretName: whale-prod-api-tls
   rules:
-    - http:
+    - host: api.whale.kubekit.io
+      http:
         paths:
           - path: /
             pathType: Prefix

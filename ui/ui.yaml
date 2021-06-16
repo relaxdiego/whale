@@ -61,7 +61,8 @@ spec:
         - ui.whale.kubekit.io
       secretName: whale-prod-ui-tls
   rules:
-    - http:
+    - host: ui.whale.kubekit.io
+      http:
         paths:
           - path: /
             pathType: Prefix
