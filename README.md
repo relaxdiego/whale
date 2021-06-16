@@ -42,7 +42,7 @@ terraform -chdir=terraform init
 ### Create Your Environment-Specific tfvars File
 
 ```
-cp terraform/example.tfvars terraform.tfvars
+cp terraform/example.tfvars terraform/terraform.tfvars
 ```
 
 Then modify the file as you see fit.
